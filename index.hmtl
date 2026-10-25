@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alertamento & Covert Ops — Calculadora</title>
+<style>
+  :root{
+    --bg:#0e1116; --card:#161b22; --card2:#1c2330; --line:#2a3341;
+    --txt:#e6edf3; --dim:#8b98a9; --acc:#4ea1ff; --good:#3fb950;
+    --warn:#d29922; --bad:#f85149; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:24px 16px 64px; background:var(--bg); color:var(--txt);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:24px}
+  .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px}
+  .card h2{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin:0 0 14px;font-weight:600}
+  .full{grid-column:1/-1}
+  label{display:block;font-size:12.5px;color:var(--dim);margin:0 0 4px}
+  .field{margin-bottom:12px}
+  input[type=number]{
+    width:100%;padding:9px 11px;background:var(--card2);border:1px solid var(--line);
+    border-radius:9px;color:var(--txt);font:14px var(--mono);outline:none;
+  }
+  input[type=number]:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(78,161,255,.15)}
+  .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+  .out{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+  .kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:5px 0;font-size:14px}
+  .kv span:first-child{color:var(--dim)}
+  .kv b{font:600 15px var(--mono)}
+  .big{
+    display:flex;justify-content:space-between;align-items:center;background:var(--card2);
+    border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:10px;
+  }
+  .big .lbl{font-size:12.5px;color:var(--dim)}
+  .big .val{font:700 26px var(--mono);color:var(--acc)}
+  .val.small{font-size:19px}
+  .hint{font-size:12px;color:var(--dim);margin-top:10px}
+  .hint code{font-family:var(--mono);color:#9fb4cc;background:#0b0f14;padding:1px 5px;border-radius:5px}
+  .pill{display:inline-block;font:600 11px var(--mono);padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--dim)}
+  .pill.ok{color:var(--good);border-color:#1f5a2c;background:#0f2415}
+  .pill.no{color:var(--bad);border-color:#5a1f1f;background:#240f0f}
+  .chart{display:flex;align-items:flex-end;gap:5px;height:150px;margin-top:14px;padding:0 2px}
+  .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+  .bar{width:100%;background:linear-gradient(180deg,#4ea1ff,#2a5c99);border-radius:4px 4px 2px 2px;min-height:2px;transition:height .2s}
+  .bar.done{background:linear-gradient(180deg,#3fb950,#1f6a2c)}
+  .tick{font:10px var(--mono);color:var(--dim)}
+  table{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top:6px}
+  th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--dim);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+  td.hl{color:var(--good)}
+  .scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Alertamento &amp; Operações Encobertas</h1>
+  <div class="sub">Calculadora de alerta máximo, taxa por tick, stealth e XP.</div>
+
+  <div class="grid">
+
+    <!-- ============ ALERTAMENTO ============ -->
+    <div class="card">
+      <h2>1 · Alertamento</h2>
+
+      <div class="row">
+        <div class="field">
+          <label>Total de asteroides</label>
+          <input type="number" id="roids" value="100" min="0" step="1">
+        </div>
+        <div class="field">
+          <label>Security guards</label>
+          <input type="number" id="guards" value="500" min="0" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Security centres</label>
+          <input type="number" id="centres" value="20" min="0" step="1">
+        </div>
+        <div class="field">
+          <label>Bónus de governo (%)</label>
+          <input type="number" id="gov" value="0" min="0" step="0.1">
+        </div>
+      </div>
+      <div class="field">
+        <label>População em segurança (%) &nbsp;<span class="pill" id="popPill">cap 50%</span></label>
+        <input type="number" id="pop" value="0" min="0" step="0.1">
+      </div>
+
+      <div class="out">
+        <div class="big">
+          <div>
+            <div class="lbl">Alertamento máximo (alvo)</div>
+            <div class="val" id="maxAlert">—</div>
+          </div>
+        </div>
+        <div class="kv"><span>Taxa de subida / tick</span><b id="upRate" style="color:var(--good)">—</b></div>
+        <div class="kv"><span>Taxa de descida / tick</span><b id="downRate" style="color:var(--bad)">—</b></div>
+        <div class="kv"><span>Rácio guards / (roids+1)</span><b id="ratio">—</b></div>
+      </div>
+
+      <div class="hint">
+        <code>(50 + 5·min(g/(r+1),15)) · (1 + (centros·2.75 + gov% + pop%)/100)</code>
+      </div>
+    </div>
+
+    <!-- ============ SIMULADOR ============ -->
+    <div class="card">
+      <h2>2 · Simulador de ticks</h2>
+      <div class="field">
+        <label>Alertamento atual</label>
+        <input type="number" id="curAlert" value="50" min="0" step="0.1">
+      </div>
+      <div class="hint" style="margin-top:0">
+        Cada tick o alerta sobe ou desce até ao máximo calculado na coluna 1.
+      </div>
+      <div class="chart" id="chart"></div>
+      <div class="kv" style="margin-top:12px"><span>Ticks até estabilizar</span><b id="ticksTo">—</b></div>
+    </div>
+
+    <!-- ============ COVERT OP ============ -->
+    <div class="card">
+      <h2>3 · Operação encoberta</h2>
+      <div class="row">
+        <div class="field">
+          <label>Stealth atual</label>
+          <input type="number" id="stealth" value="100" min="0" step="1">
+        </div>
+        <div class="field">
+          <label>Nº de agentes</label>
+          <input type="number" id="agents" value="10" min="0" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Alertamento do alvo</label>
+          <input type="number" id="targetAlert" value="50" min="0" step="0.1">
+        </div>
+        <div class="field">
+          <label>Nº da operação (1–9)</label>
+          <input type="number" id="opNum" value="1" min="1" max="9" step="1">
+        </div>
+      </div>
+
+      <div class="out">
+        <div class="big">
+          <div>
+            <div class="lbl">Chance de sucesso</div>
+            <div class="val" id="successPct">—</div>
+          </div>
+          <div id="successPill" class="pill">—</div>
+        </div>
+        <div class="kv"><span>Novo stealth</span><b id="newStealth">—</b></div>
+        <div class="kv"><span>Rolagem necessária (rand 1–9)</span><b id="neededRoll">—</b></div>
+        <div class="kv"><span>XP ganho</span><b id="xpGain">—</b></div>
+      </div>
+
+      <div class="hint">
+        <code>new_stealth = stealth − 5 − int(agentes · 0.5)</code><br>
+        Sucesso se <code>rand(1–9) + new_stealth − alerta_alvo &gt; 1</code>.<br>
+        Se o alvo for infiltrado com sucesso, o alerta dele sobe <b>+20</b>.
+      </div>
+    </div>
+
+    <!-- ============ TABELA XP ============ -->
+    <div class="card full">
+      <h2>4 · Tabela de XP por operação</h2>
+      <div class="scroll">
+        <table id="xpTable"></table>
+      </div>
+      <div class="hint">
+        <code>XP = int( 2 · [ nº_operacao + (agentes / 5) ] )</code> — 1 Exploding Fist · 2 Network Defection · 3 Security Defection · … · 9 Government Subversion.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const $  = id => document.getElementById(id);
+const val = id => { const n = parseFloat($(id).value); return isNaN(n) ? 0 : Math.max(0, n); };
+const cap = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const fmt = (v, d = 2) => v.toLocaleString('pt-BR', { maximumFractionDigits: d });
+
+/* ---------- núcleo do cálculo ---------- */
+function calcAlert() {
+  const roids   = val('roids');
+  const guards  = val('guards');
+  const centres = val('centres');
+  const gov     = val('gov');
+  const popRaw  = val('pop');
+
+  const pop     = Math.min(popRaw, 50);                 // cap 50%
+  const ratio   = guards / (roids + 1);                 // guards por asteroide
+  const ratioUp = Math.min(ratio, 15);                  // cap 15:1
+  const ratioDn = Math.min(ratio, 2);                   // cap 2:1 (descida)
+  const ratioUpRate = Math.min(ratio, 5);               // cap 5:1 (subida)
+
+  const maxAlert = (50 + 5 * ratioUp) *
+                   (1 + (centres * 2.75 + gov + pop) / 100);
+
+  const downRaw = 5 - ratioDn * (1 + (pop + gov) / 100);
+  const upRaw   = (5 + ratioUpRate) * (1 + (pop + gov) / 100);
+
+  const down = cap(Math.floor(downRaw), 1, 5);
+  const up   = cap(Math.floor(upRaw), 5, 17);
+
+  return { roids, guards, centres, gov, pop, popRaw, ratio, ratioUp, maxAlert, up, down };
+}
+
+/* ---------- render alertamento ---------- */
+function renderAlert() {
+  const r = calcAlert();
+
+  $('maxAlert').textContent = fmt(r.maxAlert);
+  $('upRate').textContent   = '+' + r.up + ' / tick';
+  $('downRate').textContent = '−' + r.down + ' / tick';
+  $('ratio').textContent    = fmt(r.ratio, 2) + ' : 1' +
+                              (r.ratio > 15 ? '  (cap 15)' : '');
+
+  const pill = $('popPill');
+  if (r.popRaw > 50) { pill.textContent = 'limitado a 50%'; pill.className = 'pill no'; }
+  else               { pill.textContent = 'cap 50%';        pill.className = 'pill'; }
+
+  renderSim(r);
+  renderXpTable();
+}
+
+/* ---------- simulador de ticks ---------- */
+function renderSim(r) {
+  const start = val('curAlert');
+  const max   = r.maxAlert;
+  const N     = 14;
+
+  let v = start;
+  const seq = [v];
+  for (let i = 0; i < N; i++) {
+    if (v < max - 1e-9)      v = Math.min(max, v + r.up);
+    else if (v > max + 1e-9) v = Math.max(max, v - r.down);
+    else break;
+    seq.push(v);
+  }
+
+  const peak = Math.max(...seq, max, 1) * 1.08;
+  const chart = $('chart');
+  chart.innerHTML = '';
+
+  seq.forEach((value, i) => {
+    const col = document.createElement('div');
+    col.className = 'col';
+
+    const bar = document.createElement('div');
+    bar.className = 'bar' + (Math.abs(value - max) < 1e-9 ? ' done' : '');
+    bar.style.height = Math.max(2, (value / peak) * 100) + '%';
+    bar.title = `tick ${i}: ${fmt(value)}`;
+
+    const lab = document.createElement('div');
+    lab.className = 'tick';
+    lab.textContent = i;
+
+    col.appendChild(bar);
+    col.appendChild(lab);
+    chart.appendChild(col);
+  });
+
+  const converged = seq.length - 1;
+  $('ticksTo').textContent = (Math.abs(start - max) < 1e-9)
+      ? 'já estabilizado'
+      : converged + ' tick' + (converged === 1 ? '' : 's');
+}
+
+/* ---------- covert op ---------- */
+function renderOp() {
+  const stealth = val('stealth');
+  const agents  = val('agents');
+  const target  = val('targetAlert');
+  const opNum   = cap(Math.round(val('opNum')) || 1, 1, 9);
+
+  const newStealth = stealth - 5 - Math.trunc(agents * 0.5);
+
+  // Sucesso: rand + newStealth - target > 1  →  rand > 1 + target - newStealth
+  const threshold = 1 + target - newStealth;
+  const wins = cap(9 - Math.floor(threshold), 0, 9);
+  const pct  = wins / 9 * 100;
+
+  const xp = Math.trunc(2 * (opNum + agents / 5));
+
+  $('newStealth').textContent  = fmt(newStealth);
+  $('successPct').textContent  = fmt(pct, 1) + '%';
+  $('neededRoll').textContent  = (wins === 0)
+      ? 'impossível'
+      : (wins === 9 ? 'qualquer (1–9)' : Math.max(1, Math.floor(threshold) + 1) + '–9');
+  $('xpGain').textContent      = xp + ' XP';
+
+  const pill = $('successPill');
+  pill.textContent = wins + '/9 rolagens';
+  pill.className = 'pill ' + (pct >= 50 ? 'ok' : 'no');
+
+  renderXpTable();
+}
+
+/* ---------- tabela XP ---------- */
+const OP_NAMES = {
+  1: 'Exploding Fist',
+  2: 'Network Defection',
+  3: 'Security Defection',
+  4: 'Op #4', 5: 'Op #5', 6: 'Op #6',
+  7: 'Op #7', 8: 'Op #8', 9: 'Government Subversion'
+};
+
+function renderXpTable() {
+  const agentCols = [5, 10, 15, 20, 25];
+  const t = $('xpTable');
+  let html = '<thead><tr><th>Operação</th>' +
+             agentCols.map(a => `<th>${a} agentes</th>`).join('') +
+             '</tr></thead><tbody>';
+
+  for (let op = 1; op <= 9; op++) {
+    html += `<tr><td>${op} · ${OP_NAMES[op]}</td>`;
+    agentCols.forEach(a => {
+      const xp = Math.trunc(2 * (op + a / 5));
+      html += `<td class="hl">${xp}</td>`;
+    });
+    html += '</tr>';
+  }
+  t.innerHTML = html + '</tbody>';
+}
+
+/* ---------- bind ---------- */
+['roids','guards','centres','gov','pop','curAlert']
+  .forEach(id => $(id).addEventListener('input', renderAlert));
+['stealth','agents','targetAlert','opNum']
+  .forEach(id => $(id).addEventListener('input', renderOp));
+
+renderAlert();
+renderOp();
+</script>
+</body>
+</html>
+
