@@ -1,6 +1,9 @@
-name = "alertamento-app"  # Escolha um nome único para o seu Worker
+name = "cov-op-pa"  # Escolha um nome único para o seu Worker
 compatibility_date = "2026-10-25" # Use a data de hoje
 
 [assets]
 directory = "."
 
+[assets]
+directory = "."
+not_found_handling = "single-page-application"
